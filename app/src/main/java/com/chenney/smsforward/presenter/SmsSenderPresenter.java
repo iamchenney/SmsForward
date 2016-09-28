@@ -8,6 +8,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.telephony.SmsManager;
 
+import com.chenney.smsforward.forward.ForwardPresenter;
 import com.chenney.smsforward.model.SmsDataSource;
 import com.chenney.smsforward.model.bean.SettingsBean;
 import com.chenney.smsforward.model.bean.SmsBean;
@@ -37,6 +38,12 @@ public class SmsSenderPresenter implements BaseSenderPresenter, LoaderManager.Lo
     private SettingsBean settingsBean;
 
     private Map<String,String> sendedMap = new HashMap<>();
+
+    ForwardPresenter forwardPresenter;
+
+    public void setForwardPresenter(ForwardPresenter forwardPresenter) {
+        this.forwardPresenter = forwardPresenter;
+    }
 
     @Inject
     public SmsSenderPresenter(LoaderProvider mLoaderProvider, SmsDataSource mSmsDataSource, LoaderManager mLoaderManager) {
@@ -82,7 +89,7 @@ public class SmsSenderPresenter implements BaseSenderPresenter, LoaderManager.Lo
     }
 
     private void send(Cursor cursor){
-
+        forwardPresenter.addLog("短信进入发送阶段");
         cursor.moveToPosition(-1);
 
         while (cursor.moveToNext()){
@@ -99,6 +106,8 @@ public class SmsSenderPresenter implements BaseSenderPresenter, LoaderManager.Lo
 
             long dayStartTime = calendar.getTimeInMillis();
 
+            forwardPresenter.addLog("短信收到时间："+smsBean.getTime());
+
             if(dayStartTime < Long.valueOf(smsBean.getTime())) {
 
 
@@ -106,7 +115,12 @@ public class SmsSenderPresenter implements BaseSenderPresenter, LoaderManager.Lo
                     SmsManager smsManager = SmsManager.getDefault();
 
                     String msg = smsBean.getBody() + " ==收到来自" + smsBean.getSenderNum();
-                    smsManager.sendTextMessage(settingsBean.getReceiverPhone(),null,msg,null,null);
+
+                    List<String> msgs = smsManager.divideMessage(msg);
+
+                    for (String sms : msgs) {
+                        smsManager.sendTextMessage(settingsBean.getReceiverPhone(),null,sms,null,null);
+                    }
 
                     sendedMap.put(smsBean.getId(),"1");
                 }
@@ -127,7 +141,9 @@ public class SmsSenderPresenter implements BaseSenderPresenter, LoaderManager.Lo
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        forwardPresenter.addLog("读取短信结束");
         if(data != null){
+            forwardPresenter.addLog("短信数据不为空");
             if(data.moveToLast()){
                 send(data);
             }
@@ -162,6 +178,10 @@ public class SmsSenderPresenter implements BaseSenderPresenter, LoaderManager.Lo
         @Override
         public void run() {
             while (bRun){
+
+                Message logMessage = forwardPresenter.LogHandler.obtainMessage();
+                logMessage.obj = "短信监控正在运行中....";
+                forwardPresenter.LogHandler.sendMessage(logMessage);
 
                 Message message = new Message();
                 message.what = 1;

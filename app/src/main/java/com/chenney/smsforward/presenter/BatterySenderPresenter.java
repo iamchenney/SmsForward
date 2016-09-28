@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.telephony.SmsManager;
 
+import com.chenney.smsforward.forward.ForwardPresenter;
 import com.chenney.smsforward.model.bean.SettingsBean;
 import com.chenney.smsforward.util.StringUtil;
 
@@ -24,6 +25,12 @@ public class BatterySenderPresenter implements BaseSenderPresenter{
 
     @Inject
     Context mContext;
+
+    ForwardPresenter forwardPresenter;
+
+    public void setForwardPresenter(ForwardPresenter forwardPresenter) {
+        this.forwardPresenter = forwardPresenter;
+    }
 
     @Inject
     public BatterySenderPresenter(){}

@@ -10,6 +10,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.telephony.SmsManager;
 
+import com.chenney.smsforward.forward.ForwardPresenter;
 import com.chenney.smsforward.model.CallDataSource;
 import com.chenney.smsforward.model.bean.PhoneBean;
 import com.chenney.smsforward.model.bean.SettingsBean;
@@ -39,6 +40,12 @@ public class CallSenderPresenter implements BaseSenderPresenter,LoaderManager.Lo
 
     @Inject
     Context mContext;
+
+    ForwardPresenter forwardPresenter;
+
+    public void setForwardPresenter(ForwardPresenter forwardPresenter) {
+        this.forwardPresenter = forwardPresenter;
+    }
 
     @Inject
     public CallSenderPresenter(LoaderManager mLoaderManager, LoaderProvider mLoaderProvider, CallDataSource mCallDataSource) {
@@ -174,6 +181,10 @@ public class CallSenderPresenter implements BaseSenderPresenter,LoaderManager.Lo
         @Override
         public void run() {
             while (bRun){
+
+                Message logMessage = forwardPresenter.LogHandler.obtainMessage();
+                logMessage.obj = "未接来电监控正在运行中....";
+                forwardPresenter.LogHandler.sendMessage(logMessage);
 
                 Message message = new Message();
                 message.what = 1;

@@ -2,6 +2,8 @@ package com.chenney.smsforward.forward;
 
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 
@@ -12,6 +14,11 @@ import com.chenney.smsforward.presenter.BatterySenderPresenter;
 import com.chenney.smsforward.presenter.CallSenderPresenter;
 import com.chenney.smsforward.presenter.SmsSenderPresenter;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
 import javax.inject.Inject;
 
 /**
@@ -20,6 +27,8 @@ import javax.inject.Inject;
 public class ForwardPresenter implements ForwardContract.Presenter,LoaderManager.LoaderCallbacks<Cursor>,SettingDataSource.GetSettingCallBack {
 
     public static final int SETTING_LOADER = 1;
+
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm");
 
     private LoaderProvider mLoaderProvider;
     private SettingDataSource mSettingDataSource;
@@ -35,6 +44,8 @@ public class ForwardPresenter implements ForwardContract.Presenter,LoaderManager
     @Inject
     BatterySenderPresenter mBatterySenderPresenter;
 
+    private List<String> logs = new LinkedList<>();
+
     @Inject
     public ForwardPresenter(LoaderProvider mLoaderProvider,
                             SettingDataSource mSettingDataSource,
@@ -48,6 +59,9 @@ public class ForwardPresenter implements ForwardContract.Presenter,LoaderManager
     @Inject
     void setupPresenter(){
         mView.setPresenter(this);
+        mSenderPresenter.setForwardPresenter(this);
+        mCallSenderPresenter.setForwardPresenter(this);
+        mBatterySenderPresenter.setForwardPresenter(this);
     }
 
     @Override
@@ -70,6 +84,14 @@ public class ForwardPresenter implements ForwardContract.Presenter,LoaderManager
     private void showEmptySetting(){
         mView.showLoading(false);
         mView.showEmptyView();
+    }
+
+    public void addLog(String log){
+
+        log = sdf.format(new Date()) + " " + log;
+
+        logs.add(0,log);
+        mView.showLog(logs);
     }
 
     @Override
@@ -150,4 +172,12 @@ public class ForwardPresenter implements ForwardContract.Presenter,LoaderManager
     public void onLoaderReset(Loader<Cursor> loader) {
 
     }
+
+    public Handler LogHandler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            addLog(msg.obj.toString());
+            return true;
+        }
+    });
 }

@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,10 +18,13 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.chenney.smsforward.R;
+import com.chenney.smsforward.adapt.StringAdapter;
 import com.chenney.smsforward.editsetting.EditSettingActivity;
 import com.chenney.smsforward.model.bean.SettingsBean;
 import com.chenney.smsforward.ui.ScrollChildSwipeRefreshLayout;
 import com.google.common.base.Preconditions;
+
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -59,6 +64,12 @@ public class ForwardFragment extends Fragment implements ForwardContract.View {
 
     @BindView(R.id.send_button)
     Button sendButton;
+    @BindView(R.id.recycle_view)
+    RecyclerView recycleView;
+
+    private StringAdapter adapter;
+
+    private LinearLayoutManager layoutManager;
 
     public ForwardFragment() {
     }
@@ -70,6 +81,21 @@ public class ForwardFragment extends Fragment implements ForwardContract.View {
         ButterKnife.bind(this, view);
 
         return view;
+    }
+
+    @Override
+    public void onViewCreated(View view,Bundle savedInstanceState){
+        super.onViewCreated(view,savedInstanceState);
+
+
+        layoutManager = new LinearLayoutManager(getContext());
+        layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        recycleView.setHasFixedSize(true);
+        recycleView.setLayoutManager(layoutManager);
+
+        adapter = new StringAdapter(getContext());
+
+        recycleView.setAdapter(adapter);
     }
 
     @Override
@@ -117,6 +143,11 @@ public class ForwardFragment extends Fragment implements ForwardContract.View {
         noTasksIcon.setImageDrawable(getResources().getDrawable(R.drawable.ic_assignment_turned_in_24dp));
     }
 
+    @Override
+    public void showLog(List<String> logs) {
+        adapter.setDatas(logs);
+    }
+
 
     @Override
     public void showEditSetting() {
@@ -144,10 +175,10 @@ public class ForwardFragment extends Fragment implements ForwardContract.View {
 
     @OnClick(R.id.send_button)
     public void onClick() {
-        if(sendButton.getText().toString().equals(getString(R.string.start_send_label))){
+        if (sendButton.getText().toString().equals(getString(R.string.start_send_label))) {
             mPersenter.startSender();
             sendButton.setText(getString(R.string.stop_send_label));
-        }else{
+        } else {
             mPersenter.stopSender();
             sendButton.setText(getString(R.string.start_send_label));
         }
